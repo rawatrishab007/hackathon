@@ -259,7 +259,14 @@ const ProjectCard = ({ project, currentUserId, onDelete }) => {
   }, [project.githubUrl]);
 
   const handleCollaborate = () => {
-    alert(`Request sent to join ${project.title}!`);
+    if (project.githubUrl) {
+      const title = encodeURIComponent(`Collaboration Request: ${project.title}`);
+      const body = encodeURIComponent(`Hi, I'm interested in collaborating on your project "${project.title}".\n\nMy skills include: [Your Skills Here]\n\nI'd like to help with...`);
+      const issueUrl = `${project.githubUrl}/issues/new?title=${title}&body=${body}`;
+      window.open(issueUrl, '_blank');
+    } else {
+      alert(`This project doesn't have a GitHub repository linked.`);
+    }
   };
 
   const isOwner = currentUserId && project.ownerId === currentUserId;
@@ -467,7 +474,9 @@ const DoubtPortal = ({ doubts }) => {
 // --- Configuration ---
 // CHANGE THIS URL if you deploy your backend (e.g., to Render or using Ngrok)
 // Example: const API_BASE_URL = 'https://my-backend.onrender.com';
-const API_BASE_URL = 'https://unwaved-birgit-heterologous.ngrok-free.dev'; 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : ''; 
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');

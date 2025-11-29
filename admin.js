@@ -6,7 +6,9 @@ if (password !== "admin123") {
 }
 
 // Configuration
-const API_BASE_URL = 'https://unwaved-birgit-heterologous.ngrok-free.dev';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : '';
 
 // DOM Elements
 const projectList = document.getElementById('project-list');
