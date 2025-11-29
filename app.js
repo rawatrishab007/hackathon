@@ -271,7 +271,9 @@ const ProjectCard = ({ project, currentUserId, onDelete }) => {
           <h3 className="text-lg font-semibold text-white group-hover:text-violet-400 transition-colors">
             {project.title}
           </h3>
-          <p className="text-sm text-slate-400">by @{project.owner}</p>
+          <p className="text-sm text-slate-400">
+            by <a href={project.User?.githubUrl || `https://github.com/${project.User?.username || project.owner}`} target="_blank" rel="noopener noreferrer" className="hover:text-violet-400 transition-colors">@{project.owner}</a>
+          </p>
         </div>
         {project.helpNeeded && (
           <span className="px-2 py-1 text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center gap-1">
@@ -957,10 +959,17 @@ function App() {
         });
         if (res.ok) {
           const savedProject = await res.json();
+          console.log('Project saved to backend:', savedProject);
+          alert('Project posted successfully!');
           setProjects(prev => [...prev, savedProject]);
+        } else {
+          const errorData = await res.json();
+          console.error('Backend failed to save project:', errorData);
+          alert(`Failed to post project: ${errorData.error}`);
         }
       } catch (err) {
         console.error('Failed to save to backend:', err);
+        alert(`Network error: ${err.message}`);
       }
     } else {
       // LocalStorage Fallback
