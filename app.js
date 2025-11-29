@@ -62,10 +62,19 @@ const Icons = {
       <line x1="22" y1="2" x2="11" y2="13"/>
       <polygon points="22 2 15 22 11 13 2 9 22 2"/>
     </svg>
+  ),
+  Trash2: (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 6h18"/>
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+      <line x1="10" x2="10" y1="11" y2="17"/>
+      <line x1="14" x2="14" y1="11" y2="17"/>
+    </svg>
   )
 };
 
-const { GraduationCap, Github, Star, GitFork, ExternalLink, AlertCircle, MessageSquare, ChevronDown, ChevronUp, Send } = Icons;
+const { GraduationCap, Github, Star, GitFork, ExternalLink, AlertCircle, MessageSquare, ChevronDown, ChevronUp, Send, Trash2 } = Icons;
 
 // --- Mock Data (Fallback) ---
 const initialProjects = [
@@ -168,34 +177,38 @@ const Navbar = ({ activeTab, setActiveTab, backendStatus }) => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-kpr-base/60 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('projects')}>
-            <div className="p-2 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg">
-              <GraduationCap className="w-6 h-6 text-white" />
+            <div className="p-2 bg-kpr-card border border-kpr-accent/30 rounded-lg shadow-[0_0_15px_rgba(112,0,255,0.3)]">
+              <GraduationCap className="w-6 h-6 text-kpr-cyan" />
             </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-              CampusCollab
+            <span className="text-2xl font-display font-bold text-white tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+              CAMPUS<span className="text-kpr-cyan">COLLAB</span>
             </span>
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => setActiveTab('projects')}
-              className={`text-sm font-medium transition-colors ${
-                activeTab === 'projects' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`text-sm font-medium transition-all tracking-wider px-4 py-2 rounded-full ${
+                activeTab === 'projects' 
+                  ? 'text-kpr-base bg-kpr-cyan shadow-[0_0_15px_rgba(0,255,240,0.4)] font-bold' 
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Projects
+              PROJECTS
             </button>
             <button
               onClick={() => setActiveTab('doubts')}
-              className={`text-sm font-medium transition-colors ${
-                activeTab === 'doubts' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`text-sm font-medium transition-all tracking-wider px-4 py-2 rounded-full ${
+                activeTab === 'doubts' 
+                  ? 'text-kpr-base bg-kpr-cyan shadow-[0_0_15px_rgba(0,255,240,0.4)] font-bold' 
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Doubt Portal
+              DOUBT PORTAL
             </button>
           </div>
 
@@ -272,59 +285,33 @@ const ProjectCard = ({ project, currentUserId, onDelete }) => {
   const isOwner = currentUserId && project.ownerId === currentUserId;
 
   return (
-    <div className="group relative flex flex-col h-full p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white group-hover:text-violet-400 transition-colors">
-            {project.title}
-          </h3>
-          <p className="text-sm text-slate-400">
-            by <a href={project.User?.githubUrl || `https://github.com/${project.User?.username || project.owner}`} target="_blank" rel="noopener noreferrer" className="hover:text-violet-400 transition-colors">@{project.owner}</a>
-          </p>
-        </div>
-        {project.helpNeeded && (
-          <span className="px-2 py-1 text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Help Needed
-          </span>
-        )}
-      </div>
-
-      <p className="text-slate-300 text-sm mb-6 flex-grow">
-        {project.description}
-      </p>
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        {project.tags.map((tag, index) => (
-          <span key={index} className="px-2 py-1 text-xs text-slate-300 bg-slate-800 rounded-md border border-slate-700">
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
-        <div className="flex items-center gap-4 text-slate-400 text-sm">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4" />
-            <span>{loading ? '-' : stats.stars}</span>
+    <div className="group relative bg-kpr-card backdrop-blur-md border border-white/5 rounded-2xl p-6 hover:border-kpr-accent/50 transition-all duration-500 hover:shadow-[0_0_30px_rgba(112,0,255,0.15)] hover:-translate-y-1 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-kpr-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      <div className="relative z-10">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-kpr-accent to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+              {project.title[0]}
+            </div>
+            <div>
+              <h3 className="text-xl font-display font-bold text-white tracking-wide group-hover:text-kpr-cyan transition-colors">
+                {project.title}
+              </h3>
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span>by @{project.owner}</span>
+                <span>•</span>
+                <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <GitFork className="w-4 h-4" />
-            <span>{loading ? '-' : stats.forks}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {isOwner && (
-            <button
+          {currentUserId && project.ownerId === currentUserId && (
+            <button 
               onClick={() => onDelete(project.id)}
-              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+              className="text-slate-500 hover:text-red-400 transition-colors p-1 hover:bg-white/5 rounded"
               title="Delete Project"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
           <a
@@ -365,17 +352,17 @@ const DoubtPortal = ({ doubts, currentUserId, onDelete, onAddComment }) => {
   return (
     <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-100px)]">
       <div className="w-full md:w-64 flex-shrink-0">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sticky top-24">
-          <h3 className="text-lg font-semibold text-white mb-4 px-2">Subjects</h3>
+        <div className="bg-kpr-card backdrop-blur-md border border-kpr-accent/20 rounded-2xl p-4 sticky top-24 shadow-lg">
+          <h3 className="text-lg font-display font-bold text-white mb-4 px-2 tracking-wide">SUBJECTS</h3>
           <div className="space-y-2">
             {subjects.map(subject => (
               <button
                 key={subject}
                 onClick={() => setSelectedSubject(subject)}
-                className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+                className={`w-full text-left px-4 py-2 rounded-lg transition-all font-medium tracking-wide ${
                   selectedSubject === subject
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    ? 'bg-kpr-cyan text-kpr-base font-bold shadow-[0_0_10px_rgba(0,255,240,0.4)]'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {subject}
@@ -390,8 +377,8 @@ const DoubtPortal = ({ doubts, currentUserId, onDelete, onAddComment }) => {
           {filteredDoubts.map(doubt => (
             <div
               key={doubt.id}
-              className={`bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl transition-all duration-300 ${
-                expandedDoubtId === doubt.id ? 'bg-white/10 border-white/20 ring-1 ring-white/20' : 'hover:bg-white/10'
+              className={`bg-kpr-card backdrop-blur-md border border-white/5 rounded-2xl transition-all duration-300 ${
+                expandedDoubtId === doubt.id ? 'bg-kpr-card border-kpr-cyan/30 shadow-[0_0_20px_rgba(0,255,240,0.1)]' : 'hover:border-kpr-accent/30 hover:shadow-[0_0_15px_rgba(112,0,255,0.1)]'
               }`}
             >
               <div
@@ -401,12 +388,12 @@ const DoubtPortal = ({ doubts, currentUserId, onDelete, onAddComment }) => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${
+                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full border tracking-wider ${
                         doubt.status === 'Resolved'
-                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                          : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                          ? 'text-kpr-cyan bg-kpr-cyan/10 border-kpr-cyan/20 shadow-[0_0_10px_rgba(0,255,240,0.2)]'
+                          : 'text-kpr-accent bg-kpr-accent/10 border-kpr-accent/20 shadow-[0_0_10px_rgba(112,0,255,0.2)]'
                       }`}>
-                        {doubt.status}
+                        {doubt.status.toUpperCase()}
                       </span>
                       <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
                         {doubt.subject}
@@ -472,7 +459,7 @@ const DoubtPortal = ({ doubts, currentUserId, onDelete, onAddComment }) => {
                           setNewComment('');
                         }
                       }}
-                      className="flex-1 bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
+                      className="flex-1 bg-kpr-base border border-kpr-accent/20 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-kpr-cyan focus:ring-1 focus:ring-kpr-cyan transition-all"
                     />
                     <button 
                       onClick={() => {
@@ -481,8 +468,8 @@ const DoubtPortal = ({ doubts, currentUserId, onDelete, onAddComment }) => {
                           setNewComment('');
                         }
                       }}
-                      className="p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors">
-                      <Send className="w-4 h-4" />
+                      className="p-2 bg-kpr-cyan hover:bg-kpr-cyan/80 text-kpr-base rounded-lg transition-colors shadow-[0_0_10px_rgba(0,255,240,0.3)]">
+                      <Send className="w-4 h-4 font-bold" />
                     </button>
                   </div>
                 </div>
@@ -865,7 +852,45 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, githubUser }) => {
       </div>
     </div>
   );
-}; 
+};
+
+const AboutUs = ({ onEnter }) => {
+  return (
+    <div className="min-h-screen bg-kpr-base text-white font-sans selection:bg-kpr-cyan/30 selection:text-kpr-cyan flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 opacity-30 pointer-events-none z-0" style={{backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")'}}></div>
+      <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-kpr-accent/20 rounded-full blur-[150px] pointer-events-none animate-pulse"></div>
+      <div className="absolute bottom-[-20%] left-[-10%] w-[800px] h-[800px] bg-kpr-cyan/10 rounded-full blur-[150px] pointer-events-none animate-pulse" style={{animationDelay: '2s'}}></div>
+
+      <div className="relative z-10 text-center max-w-4xl px-6">
+        <div className="mb-8 inline-block p-3 bg-kpr-card border border-kpr-accent/30 rounded-2xl shadow-[0_0_30px_rgba(112,0,255,0.3)] animate-bounce">
+          <GraduationCap className="w-12 h-12 text-kpr-cyan" />
+        </div>
+        
+        <h1 className="text-6xl md:text-8xl font-display font-black tracking-tighter mb-6 drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+          CAMPUS<span className="text-transparent bg-clip-text bg-gradient-to-r from-kpr-cyan to-kpr-accent">COLLAB</span>
+        </h1>
+        
+        <p className="text-xl md:text-2xl text-slate-300 mb-12 font-light tracking-wide max-w-2xl mx-auto leading-relaxed">
+          The decentralized hub for student innovation. <br/>
+          <span className="text-kpr-cyan font-medium">Collaborate</span> on projects, <span className="text-kpr-accent font-medium">solve</span> doubts, and <span className="text-white font-medium">build</span> the future.
+        </p>
+
+        <button 
+          onClick={onEnter}
+          className="group relative px-8 py-4 bg-kpr-cyan text-kpr-base font-display font-bold text-xl tracking-widest uppercase rounded-none hover:bg-white transition-all duration-300 shadow-[0_0_20px_rgba(0,255,240,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.8)] clip-path-polygon"
+          style={{clipPath: 'polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%)'}}
+        >
+          Enter Campus
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+        </button>
+      </div>
+
+      <div className="absolute bottom-8 text-slate-500 text-sm font-mono tracking-widest">
+        SYSTEM.INIT_V2.0 // READY
+      </div>
+    </div>
+  );
+};
 
 function App() {
   const [user, setUser] = useState(null);
@@ -873,8 +898,9 @@ function App() {
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);
   const [doubts, setDoubts] = useState([]);
-  const [backendStatus, setBackendStatus] = useState('checking');
+  const [backendStatus, setBackendStatus] = useState('checking'); // 'checking', 'connected', 'disconnected'
   const [backendError, setBackendError] = useState(null);
+  const [showLanding, setShowLanding] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [githubUser, setGithubUser] = useState(null);
 
@@ -1140,6 +1166,10 @@ function App() {
     }
   };
 
+  if (showLanding) {
+    return <AboutUs onEnter={() => setShowLanding(false)} />;
+  }
+
   if (!user) {
     return authView === 'login' 
       ? <Login onLogin={handleLogin} onSwitchToSignup={() => setAuthView('signup')} />
@@ -1147,10 +1177,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-200 font-sans selection:bg-violet-500/30">
-      <div className="fixed inset-0 opacity-20 pointer-events-none z-0" style={{backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")'}}></div>
-      <div className="fixed top-[-20%] right-[-10%] w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="fixed bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div className="min-h-screen bg-kpr-base text-kpr-text font-sans selection:bg-kpr-cyan/30 selection:text-kpr-cyan">
+      <div className="fixed inset-0 opacity-30 pointer-events-none z-0" style={{backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")'}}></div>
+      <div className="fixed top-[-20%] right-[-10%] w-[800px] h-[800px] bg-kpr-accent/10 rounded-full blur-[150px] pointer-events-none animate-pulse"></div>
+      <div className="fixed bottom-[-20%] left-[-10%] w-[800px] h-[800px] bg-kpr-cyan/10 rounded-full blur-[150px] pointer-events-none animate-pulse" style={{animationDelay: '2s'}}></div>
       
       <ProjectModal 
         isOpen={isModalOpen} 
