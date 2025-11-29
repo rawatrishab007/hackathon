@@ -347,9 +347,10 @@ const ProjectCard = ({ project, currentUserId, onDelete }) => {
   );
 };
 
-const DoubtPortal = ({ doubts }) => {
+const DoubtPortal = ({ doubts, currentUserId, onDelete, onAddComment }) => {
   const [selectedSubject, setSelectedSubject] = useState('All');
   const [expandedDoubtId, setExpandedDoubtId] = useState(null);
+  const [newComment, setNewComment] = useState('');
 
   const subjects = ['All', 'CS', 'Math', 'Physics'];
 
@@ -420,11 +421,22 @@ const DoubtPortal = ({ doubts }) => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 mt-4 text-slate-500 text-sm">
+                  <div className="flex items-center gap-4 mt-4 text-slate-500 text-sm">
                   <div className="flex items-center gap-1">
                     <MessageSquare className="w-4 h-4" />
                     <span>{doubt.comments.length} comments</span>
                   </div>
+                  {currentUserId && doubt.userId === currentUserId && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(doubt.id);
+                      }}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-2 py-1 rounded transition-colors text-xs"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -452,9 +464,24 @@ const DoubtPortal = ({ doubts }) => {
                     <input
                       type="text"
                       placeholder="Write a solution..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newComment.trim()) {
+                          onAddComment(doubt.id, newComment);
+                          setNewComment('');
+                        }
+                      }}
                       className="flex-1 bg-slate-900/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
                     />
-                    <button className="p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors">
+                    <button 
+                      onClick={() => {
+                        if (newComment.trim()) {
+                          onAddComment(doubt.id, newComment);
+                          setNewComment('');
+                        }
+                      }}
+                      className="p-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors">
                       <Send className="w-4 h-4" />
                     </button>
                   </div>
@@ -1045,6 +1072,74 @@ function App() {
     }
   };
 
+  // Helper to delete doubts (Hybrid)
+  const deleteDoubt = async (doubtId) => {
+    if (!confirm('Are you sure you want to delete this doubt?')) return;
+
+    if (backendStatus === 'connected') {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/doubts/${doubtId}`, {
+          method: 'DELETE',
+          headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        if (res.ok) {
+          setDoubts(prev => prev.filter(d => d.id !== doubtId));
+        }
+      } catch (err) {
+        console.error('Failed to delete doubt from backend:', err);
+      }
+    } else {
+      // LocalStorage Fallback
+      const updatedDoubts = doubts.filter(d => d.id !== doubtId);
+      setDoubts(updatedDoubts);
+      localStorage.setItem('campusCollab_doubts', JSON.stringify(updatedDoubts));
+    }
+  };
+
+  // Helper to add comments (Hybrid)
+  const addComment = async (doubtId, text) => {
+    console.log('addComment called with:', doubtId, text);
+    const commentData = { author: user ? user.username : 'Anonymous', text, userId: user ? user.id : null };
+    console.log('commentData:', commentData);
+    console.log('backendStatus:', backendStatus);
+
+    if (backendStatus === 'connected') {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/doubts/${doubtId}/comments`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify(commentData)
+        });
+        if (res.ok) {
+          const savedComment = await res.json();
+          setDoubts(prev => prev.map(d => {
+            if (d.id === doubtId) {
+              return { ...d, comments: [...d.comments, savedComment] };
+            }
+            return d;
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to add comment to backend:', err);
+        alert('Failed to add comment: ' + err.message);
+      }
+    } else {
+      // LocalStorage Fallback
+      const newComment = { ...commentData, id: Date.now() };
+      const updatedDoubts = doubts.map(d => {
+        if (d.id === doubtId) {
+          return { ...d, comments: [...d.comments, newComment] };
+        }
+        return d;
+      });
+      setDoubts(updatedDoubts);
+      localStorage.setItem('campusCollab_doubts', JSON.stringify(updatedDoubts));
+    }
+  };
+
   if (!user) {
     return authView === 'login' 
       ? <Login onLogin={handleLogin} onSwitchToSignup={() => setAuthView('signup')} />
@@ -1176,7 +1271,12 @@ function App() {
                 + Ask Question
               </button>
             </div>
-            <DoubtPortal doubts={doubts} />
+            <DoubtPortal 
+              doubts={doubts} 
+              currentUserId={user.id}
+              onDelete={deleteDoubt}
+              onAddComment={addComment}
+            />
           </div>
         )}
       </main>

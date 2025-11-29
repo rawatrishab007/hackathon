@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 const path = require('path');
 
 const app = express();
@@ -258,6 +258,38 @@ app.post('/api/doubts/:id/comments', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+app.delete('/api/doubts/:id', async (req, res) => {
+  try {
+    const doubt = await Doubt.findByPk(req.params.id);
+    if (!doubt) return res.status(404).json({ error: 'Doubt not found' });
+    await doubt.destroy();
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Cron Jobs ---
+// Delete resolved doubts older than 1 hour
+setInterval(async () => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const deletedCount = await Doubt.destroy({
+      where: {
+        status: 'Resolved',
+        updatedAt: {
+          [Op.lt]: oneHourAgo
+        }
+      }
+    });
+    if (deletedCount > 0) {
+      console.log(`[Auto-Delete] Removed ${deletedCount} resolved doubts.`);
+    }
+  } catch (err) {
+    console.error('[Auto-Delete] Error:', err);
+  }
+}, 60 * 1000); // Run every minute
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
