@@ -176,7 +176,12 @@ app.post('/api/login', async (req, res) => {
 // Projects
 app.get('/api/projects', async (req, res) => {
   try {
-    const projects = await Project.findAll();
+    const projects = await Project.findAll({
+      include: [{
+        model: User,
+        attributes: ['username', 'githubUrl']
+      }]
+    });
     // Add dummy stats since we don't store them
     const projectsWithStats = projects.map(p => ({
       ...p.toJSON(),
@@ -190,9 +195,12 @@ app.get('/api/projects', async (req, res) => {
 
 app.post('/api/projects', async (req, res) => {
   try {
+    console.log('Received project creation request:', req.body);
     const project = await Project.create(req.body);
+    console.log('Project created successfully:', project.toJSON());
     res.status(201).json(project);
   } catch (err) {
+    console.error('Error creating project:', err);
     res.status(400).json({ error: err.message });
   }
 });
