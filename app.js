@@ -467,6 +467,165 @@ const DoubtPortal = ({ doubts }) => {
 // Example: const API_BASE_URL = 'https://my-backend.onrender.com';
 const API_BASE_URL = 'https://unwaved-birgit-heterologous.ngrok-free.dev'; 
 
+const ProjectModal = ({ isOpen, onClose, onSubmit, githubUser }) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    tags: '',
+    githubUrl: '',
+    helpNeeded: false
+  });
+  const [repos, setRepos] = useState([]);
+  const [loadingRepos, setLoadingRepos] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && githubUser) {
+      fetchRepos();
+    }
+  }, [isOpen, githubUser]);
+
+  const fetchRepos = async () => {
+    setLoadingRepos(true);
+    try {
+      const res = await fetch(`https://api.github.com/users/${githubUser}/repos?sort=updated&per_page=100`);
+      if (res.ok) {
+        const data = await res.json();
+        setRepos(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch repos", error);
+    } finally {
+      setLoadingRepos(false);
+    }
+  };
+
+  const handleRepoSelect = (e) => {
+    const repoId = e.target.value;
+    if (!repoId) return;
+    
+    const repo = repos.find(r => r.id.toString() === repoId);
+    if (repo) {
+      setFormData({
+        ...formData,
+        title: repo.name,
+        description: repo.description || '',
+        githubUrl: repo.html_url,
+        tags: repo.language ? repo.language : ''
+      });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      tags: formData.tags.split(',').map(t => t.trim()).filter(t => t),
+      owner: githubUser || 'me' // Use GitHub username if available
+    });
+    onClose();
+    setFormData({ title: '', description: '', tags: '', githubUrl: '', helpNeeded: false });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        
+        <h2 className="text-2xl font-bold text-white mb-6">Post New Project</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {githubUser && (
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">Import from GitHub</label>
+              <select 
+                onChange={handleRepoSelect}
+                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              >
+                <option value="">Select a repository...</option>
+                {loadingRepos ? (
+                  <option disabled>Loading...</option>
+                ) : (
+                  repos.map(repo => (
+                    <option key={repo.id} value={repo.id}>{repo.name}</option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Project Title</label>
+            <input 
+              required
+              type="text" 
+              value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
+              className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              placeholder="e.g. AI Study Buddy"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Description</label>
+            <textarea 
+              required
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+              className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none h-24 resize-none"
+              placeholder="Describe your project..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">Tags (comma separated)</label>
+              <input 
+                type="text" 
+                value={formData.tags}
+                onChange={e => setFormData({...formData, tags: e.target.value})}
+                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                placeholder="React, Node.js"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-1">GitHub URL</label>
+              <input 
+                type="url" 
+                value={formData.githubUrl}
+                onChange={e => setFormData({...formData, githubUrl: e.target.value})}
+                className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                placeholder="https://github.com/..."
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="helpNeeded"
+              checked={formData.helpNeeded}
+              onChange={e => setFormData({...formData, helpNeeded: e.target.checked})}
+              className="w-4 h-4 rounded border-white/10 bg-slate-800 text-violet-600 focus:ring-violet-500"
+            />
+            <label htmlFor="helpNeeded" className="text-sm text-slate-300">Help Needed</label>
+          </div>
+
+          <button 
+            type="submit"
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg shadow-indigo-500/20 mt-2"
+          >
+            Post Project
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}; 
+
 function App() {
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);
