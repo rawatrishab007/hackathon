@@ -74,6 +74,52 @@ const initDb = async () => {
   try {
     await sequelize.sync({ alter: true }); // Update schema without deleting data
     console.log('Database synced');
+
+    // Seed Projects if empty
+    const projectCount = await Project.count();
+    if (projectCount === 0) {
+      await Project.bulkCreate([
+        {
+          title: "AI Study Buddy",
+          description: "An AI-powered assistant that helps students summarize lecture notes and generate quizzes.",
+          owner: "alex-dev",
+          tags: ["React", "OpenAI", "Node.js"],
+          githubUrl: "https://github.com/facebook/react",
+          helpNeeded: true,
+          ownerId: 1 // Assuming user 1 exists or will exist
+        },
+        {
+          title: "Campus Marketplace",
+          description: "Buy and sell used textbooks and dorm essentials within the campus network.",
+          owner: "sarah-codes",
+          tags: ["Vue", "Firebase", "Tailwind"],
+          githubUrl: "https://github.com/vuejs/core",
+          helpNeeded: false,
+          ownerId: 1
+        }
+      ]);
+      console.log('Seeded Projects');
+    }
+
+    // Seed Doubts if empty
+    const doubtCount = await Doubt.count();
+    if (doubtCount === 0) {
+      const doubt = await Doubt.create({
+        subject: "CS",
+        question: "How does useEffect dependency array work exactly?",
+        status: "Resolved",
+        userId: 1
+      });
+      
+      await Comment.create({
+        author: "SeniorDev",
+        text: "It runs the effect whenever any value in the array changes.",
+        DoubtId: doubt.id,
+        userId: 2
+      });
+      console.log('Seeded Doubts');
+    }
+
   } catch (err) {
     console.error('Failed to sync db:', err);
   }
