@@ -17,16 +17,20 @@ const sequelize = new Sequelize({
 });
 
 // --- Models ---
+const bcrypt = require('bcryptjs');
+
+// --- Models ---
 const User = sequelize.define('User', {
   username: { type: DataTypes.STRING, unique: true, allowNull: false },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
+  password: { type: DataTypes.STRING, allowNull: false }, // Hashed password
   githubUrl: { type: DataTypes.STRING }
 });
 
 const Project = sequelize.define('Project', {
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT },
-  owner: { type: DataTypes.STRING }, // Keeping simple string for now, could be linked to User
+  owner: { type: DataTypes.STRING }, // Username of the owner
   tags: { 
     type: DataTypes.STRING, 
     get() {
@@ -39,21 +43,29 @@ const Project = sequelize.define('Project', {
   },
   githubUrl: { type: DataTypes.STRING },
   helpNeeded: { type: DataTypes.BOOLEAN, defaultValue: false },
-  ownerId: { type: DataTypes.STRING } // ID of the user who created it
+  ownerId: { type: DataTypes.INTEGER } // ID of the User
 });
 
 const Doubt = sequelize.define('Doubt', {
   subject: { type: DataTypes.STRING },
   question: { type: DataTypes.TEXT, allowNull: false },
-  status: { type: DataTypes.ENUM('Resolved', 'Unresolved'), defaultValue: 'Unresolved' }
+  status: { type: DataTypes.ENUM('Resolved', 'Unresolved'), defaultValue: 'Unresolved' },
+  userId: { type: DataTypes.INTEGER } // ID of the User
 });
 
 const Comment = sequelize.define('Comment', {
   author: { type: DataTypes.STRING },
-  text: { type: DataTypes.TEXT }
+  text: { type: DataTypes.TEXT },
+  userId: { type: DataTypes.INTEGER } // ID of the User
 });
 
 // Relationships
+User.hasMany(Project, { foreignKey: 'ownerId' });
+Project.belongsTo(User, { foreignKey: 'ownerId' });
+
+User.hasMany(Doubt, { foreignKey: 'userId' });
+Doubt.belongsTo(User, { foreignKey: 'userId' });
+
 Doubt.hasMany(Comment, { as: 'comments' });
 Comment.belongsTo(Doubt);
 
@@ -62,29 +74,6 @@ const initDb = async () => {
   try {
     await sequelize.sync({ alter: true }); // Update schema without deleting data
     console.log('Database synced');
-    
-    // Seed data if empty
-    const projectCount = await Project.count();
-    if (projectCount === 0) {
-      await Project.bulkCreate([
-        {
-          title: "AI Study Buddy",
-          description: "An AI-powered assistant that helps students summarize lecture notes and generate quizzes.",
-          owner: "alex-dev",
-          tags: ["React", "OpenAI", "Node.js"],
-          githubUrl: "https://github.com/facebook/react",
-          helpNeeded: true
-        },
-        {
-          title: "Campus Marketplace",
-          description: "Buy and sell used textbooks and dorm essentials within the campus network.",
-          owner: "sarah-codes",
-          tags: ["Vue", "Firebase", "Tailwind"],
-          githubUrl: "https://github.com/vuejs/core",
-          helpNeeded: false
-        }
-      ]);
-    }
   } catch (err) {
     console.error('Failed to sync db:', err);
   }
@@ -93,6 +82,50 @@ const initDb = async () => {
 initDb();
 
 // --- API Endpoints ---
+
+// Auth
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { username, email, password, githubUrl } = req.body;
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const user = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      githubUrl
+    });
+    
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = user.toJSON();
+    res.status(201).json(userWithoutPassword);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ where: { email } });
+    
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+    
+    const { password: _, ...userWithoutPassword } = user.toJSON();
+    res.json(userWithoutPassword);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Projects
 app.get('/api/projects', async (req, res) => {
@@ -122,10 +155,6 @@ app.delete('/api/projects/:id', async (req, res) => {
   try {
     const project = await Project.findByPk(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
-    
-    // In a real app, we would verify req.user.id === project.ownerId here
-    // For this MVP, we rely on the frontend to only show the delete button
-    
     await project.destroy();
     res.status(204).send();
   } catch (err) {
@@ -148,7 +177,6 @@ app.get('/api/doubts', async (req, res) => {
 app.post('/api/doubts', async (req, res) => {
   try {
     const doubt = await Doubt.create(req.body);
-    // Return with empty comments array to match frontend expectation
     res.status(201).json({ ...doubt.toJSON(), comments: [] });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -165,16 +193,6 @@ app.post('/api/doubts/:id/comments', async (req, res) => {
       DoubtId: doubt.id
     });
     res.status(201).json(comment);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// Users (Basic placeholder)
-app.post('/api/users', async (req, res) => {
-  try {
-    const user = await User.create(req.body);
-    res.status(201).json(user);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

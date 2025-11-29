@@ -467,6 +467,209 @@ const DoubtPortal = ({ doubts }) => {
 // Example: const API_BASE_URL = 'https://my-backend.onrender.com';
 const API_BASE_URL = 'https://unwaved-birgit-heterologous.ngrok-free.dev'; 
 
+const Login = ({ onLogin, onSwitchToSignup }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        onLogin(data);
+      } else {
+        setError(data.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Failed to connect to server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
+      <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <h2 className="text-3xl font-bold text-white mb-2 text-center">Welcome Back</h2>
+        <p className="text-slate-400 text-center mb-8">Sign in to continue to CampusCollab</p>
+        
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+            <input 
+              type="email" 
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              placeholder="you@university.edu"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+            <input 
+              type="password" 
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-slate-400">
+          Don't have an account?{' '}
+          <button onClick={onSwitchToSignup} className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
+            Create Account
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Signup = ({ onSignup, onSwitchToLogin }) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    githubUrl: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        onSignup(data);
+      } else {
+        setError(data.error || 'Signup failed');
+      }
+    } catch (err) {
+      setError('Failed to connect to server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
+      <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <h2 className="text-3xl font-bold text-white mb-2 text-center">Create Account</h2>
+        <p className="text-slate-400 text-center mb-8">Join the CampusCollab community</p>
+        
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Username</label>
+            <input 
+              type="text" 
+              required
+              value={formData.username}
+              onChange={(e) => setFormData({...formData, username: e.target.value})}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              placeholder="johndoe"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+            <input 
+              type="email" 
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              placeholder="you@university.edu"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+            <input 
+              type="password" 
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">GitHub Profile (Optional)</label>
+            <input 
+              type="url" 
+              value={formData.githubUrl}
+              onChange={(e) => setFormData({...formData, githubUrl: e.target.value})}
+              className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+              placeholder="https://github.com/johndoe"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          >
+            {loading ? 'Creating Account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-slate-400">
+          Already have an account?{' '}
+          <button onClick={onSwitchToLogin} className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
+            Sign In
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ProjectModal = ({ isOpen, onClose, onSubmit, githubUser }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -627,26 +830,23 @@ const ProjectModal = ({ isOpen, onClose, onSubmit, githubUser }) => {
 }; 
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [authView, setAuthView] = useState('login'); // 'login' or 'signup'
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);
   const [doubts, setDoubts] = useState([]);
   const [backendStatus, setBackendStatus] = useState('checking');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [githubUser, setGithubUser] = useState(null);
-  const [userId, setUserId] = useState('');
 
   useEffect(() => {
-    // Initialize User ID
-    let storedUserId = localStorage.getItem('campusCollab_userId');
-    if (!storedUserId) {
-      storedUserId = 'user_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('campusCollab_userId', storedUserId);
+    // Check for stored user
+    const storedUser = localStorage.getItem('campusCollab_user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setGithubUser(parsedUser.username); // Use username as githubUser for now
     }
-    setUserId(storedUserId);
-
-    // Get stored GitHub user
-    const storedGithubUser = localStorage.getItem('campusCollab_githubUser');
-    if (storedGithubUser) setGithubUser(storedGithubUser);
 
     const initData = async () => {
       try {
@@ -692,9 +892,27 @@ function App() {
     initData();
   }, []);
 
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('campusCollab_user', JSON.stringify(userData));
+    setGithubUser(userData.username);
+  };
+
+  const handleSignup = (userData) => {
+    setUser(userData);
+    localStorage.setItem('campusCollab_user', JSON.stringify(userData));
+    setGithubUser(userData.username);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('campusCollab_user');
+    setGithubUser(null);
+  };
+
   // Helper to save projects (Hybrid)
   const addProject = async (newProject) => {
-    const projectWithMeta = { ...newProject, ownerId: userId };
+    const projectWithMeta = { ...newProject, ownerId: user ? user.id : 'local' };
 
     if (backendStatus === 'connected') {
       try {
@@ -748,6 +966,8 @@ function App() {
 
   // Helper to save doubts (Hybrid)
   const addDoubt = async (newDoubt) => {
+    const doubtWithMeta = { ...newDoubt, userId: user ? user.id : 'local' };
+
     if (backendStatus === 'connected') {
       try {
         const res = await fetch(`${API_BASE_URL}/api/doubts`, {
@@ -756,7 +976,7 @@ function App() {
             'Content-Type': 'application/json',
             'ngrok-skip-browser-warning': 'true'
           },
-          body: JSON.stringify(newDoubt)
+          body: JSON.stringify(doubtWithMeta)
         });
         if (res.ok) {
           const savedDoubt = await res.json();
@@ -767,12 +987,18 @@ function App() {
       }
     } else {
       // LocalStorage Fallback
-      const doubtWithId = { ...newDoubt, id: Date.now(), status: 'Unresolved', comments: [] };
+      const doubtWithId = { ...doubtWithMeta, id: Date.now(), status: 'Unresolved', comments: [] };
       const updatedDoubts = [...doubts, doubtWithId];
       setDoubts(updatedDoubts);
       localStorage.setItem('campusCollab_doubts', JSON.stringify(updatedDoubts));
     }
   };
+
+  if (!user) {
+    return authView === 'login' 
+      ? <Login onLogin={handleLogin} onSwitchToSignup={() => setAuthView('signup')} />
+      : <Signup onSignup={handleSignup} onSwitchToLogin={() => setAuthView('login')} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans selection:bg-violet-500/30">
@@ -787,7 +1013,63 @@ function App() {
         githubUser={githubUser}
       />
 
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} backendStatus={backendStatus} />
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('projects')}>
+              <div className="p-2 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                CampusCollab
+              </span>
+            </div>
+
+            <div className="hidden md:flex items-center space-x-8">
+              <button
+                onClick={() => setActiveTab('projects')}
+                className={`text-sm font-medium transition-colors ${
+                  activeTab === 'projects' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Projects
+              </button>
+              <button
+                onClick={() => setActiveTab('doubts')}
+                className={`text-sm font-medium transition-colors ${
+                  activeTab === 'doubts' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Doubt Portal
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4">
+               {/* Connection Status Indicator */}
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
+                backendStatus === 'connected' 
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  backendStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                }`} />
+                {backendStatus === 'connected' ? 'Live Database' : 'Local Mode'}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-300">@{user.username}</span>
+                <button 
+                  onClick={handleLogout}
+                  className="text-xs text-red-400 hover:text-red-300 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/10 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
         {activeTab === 'projects' ? (
@@ -806,7 +1088,7 @@ function App() {
                 <ProjectCard 
                   key={project.id} 
                   project={project} 
-                  currentUserId={userId}
+                  currentUserId={user.id}
                   onDelete={deleteProject}
                 />
               ))}
