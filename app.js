@@ -474,6 +474,7 @@ function App() {
   const [backendStatus, setBackendStatus] = useState('checking');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [githubUser, setGithubUser] = useState(null);
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
     // Initialize User ID
