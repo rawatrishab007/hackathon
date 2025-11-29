@@ -208,7 +208,7 @@ const Navbar = ({ activeTab, setActiveTab, backendStatus }) => {
   );
 };
 
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, currentUserId, onDelete }) => {
   const [stats, setStats] = useState({ stars: 0, forks: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -239,6 +239,8 @@ const ProjectCard = ({ project }) => {
   const handleCollaborate = () => {
     alert(`Request sent to join ${project.title}!`);
   };
+
+  const isOwner = currentUserId && project.ownerId === currentUserId;
 
   return (
     <div className="group relative flex flex-col h-full p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300">
@@ -282,6 +284,18 @@ const ProjectCard = ({ project }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          {isOwner && (
+            <button
+              onClick={() => onDelete(project.id)}
+              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+              title="Delete Project"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          )}
           <a
             href={project.githubUrl}
             target="_blank"
@@ -426,6 +440,9 @@ const DoubtPortal = ({ doubts }) => {
 // --- Configuration ---
 // CHANGE THIS URL if you deploy your backend (e.g., to Render or using Ngrok)
 // Example: const API_BASE_URL = 'https://my-backend.onrender.com';
+// --- Configuration ---
+// CHANGE THIS URL if you deploy your backend (e.g., to Render or using Ngrok)
+// Example: const API_BASE_URL = 'https://my-backend.onrender.com';
 const API_BASE_URL = 'https://unwaved-birgit-heterologous.ngrok-free.dev'; 
 
 function App() {
@@ -433,8 +450,17 @@ function App() {
   const [projects, setProjects] = useState([]);
   const [doubts, setDoubts] = useState([]);
   const [backendStatus, setBackendStatus] = useState('checking');
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
+    // Initialize User ID
+    let storedUserId = localStorage.getItem('campusCollab_userId');
+    if (!storedUserId) {
+      storedUserId = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('campusCollab_userId', storedUserId);
+    }
+    setUserId(storedUserId);
+
     const initData = async () => {
       try {
         const headers = { 
@@ -481,6 +507,8 @@ function App() {
 
   // Helper to save projects (Hybrid)
   const addProject = async (newProject) => {
+    const projectWithMeta = { ...newProject, ownerId: userId };
+
     if (backendStatus === 'connected') {
       try {
         const res = await fetch(`${API_BASE_URL}/api/projects`, {
@@ -489,7 +517,7 @@ function App() {
             'Content-Type': 'application/json',
             'ngrok-skip-browser-warning': 'true'
           },
-          body: JSON.stringify(newProject)
+          body: JSON.stringify(projectWithMeta)
         });
         if (res.ok) {
           const savedProject = await res.json();
@@ -500,8 +528,32 @@ function App() {
       }
     } else {
       // LocalStorage Fallback
-      const projectWithId = { ...newProject, id: Date.now(), stats: { stars: 0, forks: 0 } };
+      const projectWithId = { ...projectWithMeta, id: Date.now(), stats: { stars: 0, forks: 0 } };
       const updatedProjects = [...projects, projectWithId];
+      setProjects(updatedProjects);
+      localStorage.setItem('campusCollab_projects', JSON.stringify(updatedProjects));
+    }
+  };
+
+  // Helper to delete projects (Hybrid)
+  const deleteProject = async (projectId) => {
+    if (!confirm('Are you sure you want to delete this project?')) return;
+
+    if (backendStatus === 'connected') {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
+          method: 'DELETE',
+          headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        if (res.ok) {
+          setProjects(prev => prev.filter(p => p.id !== projectId));
+        }
+      } catch (err) {
+        console.error('Failed to delete from backend:', err);
+      }
+    } else {
+      // LocalStorage Fallback
+      const updatedProjects = projects.filter(p => p.id !== projectId);
       setProjects(updatedProjects);
       localStorage.setItem('campusCollab_projects', JSON.stringify(updatedProjects));
     }
@@ -567,7 +619,12 @@ function App() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map(project => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard 
+                  key={project.id} 
+                  project={project} 
+                  currentUserId={userId}
+                  onDelete={deleteProject}
+                />
               ))}
             </div>
           </div>
