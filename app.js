@@ -839,13 +839,29 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [githubUser, setGithubUser] = useState(null);
 
+  const getGithubUsername = (user) => {
+    if (user.githubUrl) {
+      try {
+        const url = new URL(user.githubUrl);
+        const pathParts = url.pathname.split('/').filter(p => p);
+        if (pathParts.length > 0) return pathParts[0];
+      } catch (e) {
+        console.log('Invalid GitHub URL', e);
+      }
+    }
+    return user.username;
+  };
+
   useEffect(() => {
     // Check for stored user
     const storedUser = localStorage.getItem('campusCollab_user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      setGithubUser(parsedUser.username); // Use username as githubUser for now
+      
+      // Try to get GitHub user from stored preference first, then derived from user
+      const storedGithubUser = localStorage.getItem('campusCollab_githubUser');
+      setGithubUser(storedGithubUser || getGithubUsername(parsedUser));
     }
 
     const initData = async () => {
@@ -897,19 +913,32 @@ function App() {
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem('campusCollab_user', JSON.stringify(userData));
-    setGithubUser(userData.username);
+    const ghUser = getGithubUsername(userData);
+    setGithubUser(ghUser);
+    localStorage.setItem('campusCollab_githubUser', ghUser);
   };
 
   const handleSignup = (userData) => {
     setUser(userData);
     localStorage.setItem('campusCollab_user', JSON.stringify(userData));
-    setGithubUser(userData.username);
+    const ghUser = getGithubUsername(userData);
+    setGithubUser(ghUser);
+    localStorage.setItem('campusCollab_githubUser', ghUser);
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('campusCollab_user');
     setGithubUser(null);
+    localStorage.removeItem('campusCollab_githubUser');
+  };
+
+  const handleConnectGithub = () => {
+    const username = prompt("Enter your GitHub username:", githubUser || "");
+    if (username) {
+      setGithubUser(username);
+      localStorage.setItem('campusCollab_githubUser', username);
+    }
   };
 
   // Helper to save projects (Hybrid)
@@ -1060,6 +1089,19 @@ function App() {
               </div>
 
               <div className="flex items-center gap-3">
+                <button 
+                  onClick={handleConnectGithub}
+                  className={`flex items-center gap-2 px-3 py-1 text-xs font-medium transition-all rounded-full border ${
+                    githubUser 
+                      ? 'bg-violet-600/10 border-violet-500/20 text-violet-400 hover:bg-violet-600/20' 
+                      : 'text-slate-400 bg-white/5 hover:bg-white/10 border-white/10'
+                  }`}
+                  title={githubUser ? `Connected as ${githubUser}` : "Connect GitHub"}
+                >
+                  <Github className="w-3 h-3" />
+                  <span className="hidden sm:inline">{githubUser || 'Connect'}</span>
+                </button>
+
                 <span className="text-sm text-slate-300">@{user.username}</span>
                 <button 
                   onClick={handleLogout}
