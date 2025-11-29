@@ -416,60 +416,92 @@ function App() {
   const [backendStatus, setBackendStatus] = useState('checking');
 
   useEffect(() => {
-    const fetchData = async () => {
+    const initData = async () => {
       try {
-        // Fetch Projects
+        // Try connecting to Backend
         const projectsRes = await fetch('http://localhost:3000/api/projects');
         if (!projectsRes.ok) throw new Error('Backend offline');
+        
         const projectsData = await projectsRes.json();
-        setProjects(projectsData);
-
-        // Fetch Doubts
         const doubtsRes = await fetch('http://localhost:3000/api/doubts');
         const doubtsData = await doubtsRes.json();
-        setDoubts(doubtsData);
 
+        setProjects(projectsData);
+        setDoubts(doubtsData);
         setBackendStatus('connected');
+        console.log('Connected to Backend Database');
       } catch (err) {
-        console.error('Backend connection failed:', err);
+        console.log('Backend offline, switching to Browser Database (LocalStorage)');
         setBackendStatus('disconnected');
+        
+        // Fallback to LocalStorage
+        const storedProjects = localStorage.getItem('campusCollab_projects');
+        const storedDoubts = localStorage.getItem('campusCollab_doubts');
+
+        if (storedProjects) setProjects(JSON.parse(storedProjects));
+        else {
+          setProjects(initialProjects);
+          localStorage.setItem('campusCollab_projects', JSON.stringify(initialProjects));
+        }
+
+        if (storedDoubts) setDoubts(JSON.parse(storedDoubts));
+        else {
+          setDoubts(initialDoubts);
+          localStorage.setItem('campusCollab_doubts', JSON.stringify(initialDoubts));
+        }
       }
     };
 
-    fetchData();
+    initData();
   }, []);
 
-  // Helper to save projects
+  // Helper to save projects (Hybrid)
   const addProject = async (newProject) => {
-    try {
-      const res = await fetch('http://localhost:3000/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProject)
-      });
-      if (res.ok) {
-        const savedProject = await res.json();
-        setProjects([...projects, savedProject]);
+    if (backendStatus === 'connected') {
+      try {
+        const res = await fetch('http://localhost:3000/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProject)
+        });
+        if (res.ok) {
+          const savedProject = await res.json();
+          setProjects(prev => [...prev, savedProject]);
+        }
+      } catch (err) {
+        console.error('Failed to save to backend:', err);
       }
-    } catch (err) {
-      console.error('Failed to add project:', err);
+    } else {
+      // LocalStorage Fallback
+      const projectWithId = { ...newProject, id: Date.now(), stats: { stars: 0, forks: 0 } };
+      const updatedProjects = [...projects, projectWithId];
+      setProjects(updatedProjects);
+      localStorage.setItem('campusCollab_projects', JSON.stringify(updatedProjects));
     }
   };
 
-  // Helper to save doubts
+  // Helper to save doubts (Hybrid)
   const addDoubt = async (newDoubt) => {
-    try {
-      const res = await fetch('http://localhost:3000/api/doubts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newDoubt)
-      });
-      if (res.ok) {
-        const savedDoubt = await res.json();
-        setDoubts([...doubts, savedDoubt]);
+    if (backendStatus === 'connected') {
+      try {
+        const res = await fetch('http://localhost:3000/api/doubts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newDoubt)
+        });
+        if (res.ok) {
+          const savedDoubt = await res.json();
+          setDoubts(prev => [...prev, savedDoubt]);
+        }
+      } catch (err) {
+        console.error('Failed to save to backend:', err);
       }
-    } catch (err) {
-      console.error('Failed to add doubt:', err);
+    } else {
+      // LocalStorage Fallback
+      const doubtWithId = { ...newDoubt, id: Date.now(), status: 'Unresolved', comments: [] };
+      const updatedDoubts = [...doubts, doubtWithId];
+      setDoubts(updatedDoubts);
+      localStorage.setItem('campusCollab_doubts', JSON.stringify(updatedDoubts));
     }
   };
 
