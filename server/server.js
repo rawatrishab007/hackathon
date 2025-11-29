@@ -38,7 +38,8 @@ const Project = sequelize.define('Project', {
     }
   },
   githubUrl: { type: DataTypes.STRING },
-  helpNeeded: { type: DataTypes.BOOLEAN, defaultValue: false }
+  helpNeeded: { type: DataTypes.BOOLEAN, defaultValue: false },
+  ownerId: { type: DataTypes.STRING } // ID of the user who created it
 });
 
 const Doubt = sequelize.define('Doubt', {
@@ -59,7 +60,7 @@ Comment.belongsTo(Doubt);
 // --- Initialization ---
 const initDb = async () => {
   try {
-    await sequelize.sync(); // Use { force: true } to reset DB
+    await sequelize.sync({ alter: true }); // Update schema without deleting data
     console.log('Database synced');
     
     // Seed data if empty
@@ -114,6 +115,21 @@ app.post('/api/projects', async (req, res) => {
     res.status(201).json(project);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/projects/:id', async (req, res) => {
+  try {
+    const project = await Project.findByPk(req.params.id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    
+    // In a real app, we would verify req.user.id === project.ownerId here
+    // For this MVP, we rely on the frontend to only show the delete button
+    
+    await project.destroy();
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
