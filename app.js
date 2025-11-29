@@ -418,26 +418,60 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch Projects
         const projectsRes = await fetch('http://localhost:3000/api/projects');
         if (!projectsRes.ok) throw new Error('Backend offline');
         const projectsData = await projectsRes.json();
         setProjects(projectsData);
 
+        // Fetch Doubts
         const doubtsRes = await fetch('http://localhost:3000/api/doubts');
         const doubtsData = await doubtsRes.json();
         setDoubts(doubtsData);
 
         setBackendStatus('connected');
       } catch (err) {
-        console.warn('Backend offline, using mock data:', err);
-        setProjects(initialProjects);
-        setDoubts(initialDoubts);
+        console.error('Backend connection failed:', err);
         setBackendStatus('disconnected');
       }
     };
 
     fetchData();
   }, []);
+
+  // Helper to save projects
+  const addProject = async (newProject) => {
+    try {
+      const res = await fetch('http://localhost:3000/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProject)
+      });
+      if (res.ok) {
+        const savedProject = await res.json();
+        setProjects([...projects, savedProject]);
+      }
+    } catch (err) {
+      console.error('Failed to add project:', err);
+    }
+  };
+
+  // Helper to save doubts
+  const addDoubt = async (newDoubt) => {
+    try {
+      const res = await fetch('http://localhost:3000/api/doubts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDoubt)
+      });
+      if (res.ok) {
+        const savedDoubt = await res.json();
+        setDoubts([...doubts, savedDoubt]);
+      }
+    } catch (err) {
+      console.error('Failed to add doubt:', err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans selection:bg-violet-500/30">
@@ -452,7 +486,19 @@ function App() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-bold text-white">Project Marketplace</h2>
-              <button className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg transition-all">
+              <button 
+                onClick={() => {
+                  const title = prompt('Project Title:');
+                  if (title) addProject({ 
+                    title, 
+                    description: 'New community project', 
+                    owner: 'me', 
+                    tags: ['New'], 
+                    githubUrl: 'https://github.com', 
+                    helpNeeded: true 
+                  });
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg transition-all">
                 + Post Project
               </button>
             </div>
@@ -467,7 +513,12 @@ function App() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-bold text-white">Doubt Portal</h2>
-              <button className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg transition-all">
+              <button 
+                onClick={() => {
+                  const question = prompt('Your Question:');
+                  if (question) addDoubt({ subject: 'General', question });
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg transition-all">
                 + Ask Question
               </button>
             </div>
