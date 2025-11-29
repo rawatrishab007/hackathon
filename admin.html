@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - CampusCollab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-indigo-400">
+                Admin Control Panel
+            </h1>
+            <a href="index.html" class="text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                Back to Site
+            </a>
+        </header>
+
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+            <div class="p-6 border-b border-white/10">
+                <h2 class="text-xl font-semibold flex items-center gap-2">
+                    <i data-lucide="database" class="w-5 h-5 text-violet-400"></i>
+                    Project Database
+                </h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-900/50 text-slate-400 text-sm uppercase tracking-wider">
+                            <th class="p-4 font-medium border-b border-white/10">ID</th>
+                            <th class="p-4 font-medium border-b border-white/10">Title</th>
+                            <th class="p-4 font-medium border-b border-white/10">Description</th>
+                            <th class="p-4 font-medium border-b border-white/10">Owner</th>
+                            <th class="p-4 font-medium border-b border-white/10 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="project-list" class="divide-y divide-white/5">
+                        <!-- Projects will be injected here -->
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-slate-500 italic">Loading projects...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

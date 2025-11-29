@@ -1164,6 +1164,13 @@ function App() {
           </div>
         )}
       </main>
+
+      <footer className="mt-12 py-6 text-center text-slate-500 text-sm border-t border-white/5">
+        <p>© 2025 CampusCollab. All rights reserved.</p>
+        <a href="/admin.html" className="mt-2 inline-block text-slate-600 hover:text-slate-400 transition-colors text-xs">
+          Admin Panel
+        </a>
+      </footer>
     </div>
   );
 }
