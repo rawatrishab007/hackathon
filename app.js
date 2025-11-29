@@ -674,5 +674,51 @@ function App() {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ error, errorInfo });
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white p-8">
+          <div className="max-w-2xl w-full bg-slate-800 p-6 rounded-xl border border-red-500/50">
+            <h1 className="text-2xl font-bold text-red-400 mb-4">Something went wrong.</h1>
+            <p className="mb-4 text-slate-300">Please report this error to the developer:</p>
+            <pre className="bg-black/50 p-4 rounded text-sm text-red-300 overflow-auto whitespace-pre-wrap">
+              {this.state.error && this.state.error.toString()}
+              <br />
+              {this.state.errorInfo && this.state.errorInfo.componentStack}
+            </pre>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-6 px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg transition-colors"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children; 
+  }
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
