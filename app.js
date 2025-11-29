@@ -412,7 +412,7 @@ const DoubtPortal = ({ doubts }) => {
 // --- Configuration ---
 // CHANGE THIS URL if you deploy your backend (e.g., to Render or using Ngrok)
 // Example: const API_BASE_URL = 'https://my-backend.onrender.com';
-const API_BASE_URL = 'http://localhost:3000'; 
+const API_BASE_URL = 'https://unwaved-birgit-heterologous.ngrok-free.dev'; 
 
 function App() {
   const [activeTab, setActiveTab] = useState('projects');
@@ -423,12 +423,17 @@ function App() {
   useEffect(() => {
     const initData = async () => {
       try {
+        const headers = { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true' 
+        };
+
         // Try connecting to Backend
-        const projectsRes = await fetch(`${API_BASE_URL}/api/projects`);
+        const projectsRes = await fetch(`${API_BASE_URL}/api/projects`, { headers });
         if (!projectsRes.ok) throw new Error('Backend offline');
         
         const projectsData = await projectsRes.json();
-        const doubtsRes = await fetch(`${API_BASE_URL}/api/doubts`);
+        const doubtsRes = await fetch(`${API_BASE_URL}/api/doubts`, { headers });
         const doubtsData = await doubtsRes.json();
 
         setProjects(projectsData);
@@ -436,7 +441,7 @@ function App() {
         setBackendStatus('connected');
         console.log(`Connected to Backend at ${API_BASE_URL}`);
       } catch (err) {
-        console.log('Backend offline or blocked (Mixed Content), switching to Browser Database (LocalStorage)');
+        console.log('Backend offline or blocked, switching to Browser Database (LocalStorage)', err);
         setBackendStatus('disconnected');
         
         // Fallback to LocalStorage
@@ -466,7 +471,10 @@ function App() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/projects`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
           body: JSON.stringify(newProject)
         });
         if (res.ok) {
@@ -491,7 +499,10 @@ function App() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/doubts`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
           body: JSON.stringify(newDoubt)
         });
         if (res.ok) {
