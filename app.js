@@ -152,6 +152,21 @@ const initialDoubts = [
 // --- Components ---
 
 const Navbar = ({ activeTab, setActiveTab, backendStatus }) => {
+  const [githubUser, setGithubUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('campusCollab_githubUser');
+    if (storedUser) setGithubUser(storedUser);
+  }, []);
+
+  const handleConnectGithub = () => {
+    const username = prompt("Enter your GitHub username:");
+    if (username) {
+      localStorage.setItem('campusCollab_githubUser', username);
+      setGithubUser(username);
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -197,9 +212,16 @@ const Navbar = ({ activeTab, setActiveTab, backendStatus }) => {
               {backendStatus === 'connected' ? 'Live Database' : 'Local Mode'}
             </div>
 
-            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all">
+            <button 
+              onClick={handleConnectGithub}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all rounded-full border ${
+                githubUser 
+                  ? 'bg-violet-600/10 border-violet-500/20 text-violet-400 hover:bg-violet-600/20' 
+                  : 'text-white bg-white/5 hover:bg-white/10 border-white/10'
+              }`}
+            >
               <Github className="w-4 h-4" />
-              <span>Connect GitHub</span>
+              <span>{githubUser ? githubUser : 'Connect GitHub'}</span>
             </button>
           </div>
         </div>
