@@ -151,7 +151,7 @@ const initialDoubts = [
 
 // --- Components ---
 
-const Navbar = ({ activeTab, setActiveTab }) => {
+const Navbar = ({ activeTab, setActiveTab, backendStatus }) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -184,10 +184,24 @@ const Navbar = ({ activeTab, setActiveTab }) => {
             </button>
           </div>
 
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all">
-            <Github className="w-4 h-4" />
-            <span>Connect GitHub</span>
-          </button>
+          <div className="flex items-center gap-4">
+             {/* Connection Status Indicator */}
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${
+              backendStatus === 'connected' 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                backendStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+              }`} />
+              {backendStatus === 'connected' ? 'Live Database' : 'Local Mode'}
+            </div>
+
+            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all">
+              <Github className="w-4 h-4" />
+              <span>Connect GitHub</span>
+            </button>
+          </div>
         </div>
       </div>
     </nav>
@@ -527,7 +541,7 @@ function App() {
       <div className="fixed top-[-20%] right-[-10%] w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="fixed bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} backendStatus={backendStatus} />
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
         {activeTab === 'projects' ? (
