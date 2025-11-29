@@ -10,6 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 
+// --- Logging Middleware ---
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.headers.origin}`);
+  next();
+});
+
 // --- Database Setup ---
 const sequelize = new Sequelize({
   dialect: 'sqlite',

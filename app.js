@@ -474,9 +474,9 @@ const DoubtPortal = ({ doubts }) => {
 // --- Configuration ---
 // CHANGE THIS URL if you deploy your backend (e.g., to Render or using Ngrok)
 // Example: const API_BASE_URL = 'https://my-backend.onrender.com';
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
   ? 'http://localhost:3000'
-  : ''; 
+  : 'https://unwaved-birgit-heterologous.ngrok-free.dev'; 
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
@@ -847,6 +847,7 @@ function App() {
   const [projects, setProjects] = useState([]);
   const [doubts, setDoubts] = useState([]);
   const [backendStatus, setBackendStatus] = useState('checking');
+  const [backendError, setBackendError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [githubUser, setGithubUser] = useState(null);
 
@@ -899,6 +900,7 @@ function App() {
       } catch (err) {
         console.log('Backend offline or blocked, switching to Browser Database (LocalStorage)', err);
         setBackendStatus('disconnected');
+        setBackendError(err.message);
         
         // Fallback to LocalStorage
         const storedProjects = localStorage.getItem('campusCollab_projects');
@@ -1105,6 +1107,11 @@ function App() {
                 }`} />
                 {backendStatus === 'connected' ? 'Live Database' : 'Local Mode'}
               </div>
+              {backendStatus !== 'connected' && (
+                <span className="text-xs text-red-400 ml-2" title={backendError}>
+                  ({backendError || 'Connection Failed'})
+                </span>
+              )}
 
               <div className="flex items-center gap-3">
                 <button 
