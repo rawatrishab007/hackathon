@@ -472,7 +472,8 @@ function App() {
   const [projects, setProjects] = useState([]);
   const [doubts, setDoubts] = useState([]);
   const [backendStatus, setBackendStatus] = useState('checking');
-  const [userId, setUserId] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [githubUser, setGithubUser] = useState(null);
 
   useEffect(() => {
     // Initialize User ID
@@ -482,6 +483,10 @@ function App() {
       localStorage.setItem('campusCollab_userId', storedUserId);
     }
     setUserId(storedUserId);
+
+    // Get stored GitHub user
+    const storedGithubUser = localStorage.getItem('campusCollab_githubUser');
+    if (storedGithubUser) setGithubUser(storedGithubUser);
 
     const initData = async () => {
       try {
@@ -614,6 +619,13 @@ function App() {
       <div className="fixed inset-0 opacity-20 pointer-events-none z-0" style={{backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")'}}></div>
       <div className="fixed top-[-20%] right-[-10%] w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="fixed bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+      
+      <ProjectModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSubmit={addProject}
+        githubUser={githubUser}
+      />
 
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} backendStatus={backendStatus} />
 
@@ -623,17 +635,7 @@ function App() {
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-bold text-white">Project Marketplace</h2>
               <button 
-                onClick={() => {
-                  const title = prompt('Project Title:');
-                  if (title) addProject({ 
-                    title, 
-                    description: 'New community project', 
-                    owner: 'me', 
-                    tags: ['New'], 
-                    githubUrl: 'https://github.com', 
-                    helpNeeded: true 
-                  });
-                }}
+                onClick={() => setIsModalOpen(true)}
                 className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg transition-all">
                 + Post Project
               </button>
