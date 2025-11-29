@@ -409,6 +409,11 @@ const DoubtPortal = ({ doubts }) => {
   );
 };
 
+// --- Configuration ---
+// CHANGE THIS URL if you deploy your backend (e.g., to Render or using Ngrok)
+// Example: const API_BASE_URL = 'https://my-backend.onrender.com';
+const API_BASE_URL = 'http://localhost:3000'; 
+
 function App() {
   const [activeTab, setActiveTab] = useState('projects');
   const [projects, setProjects] = useState([]);
@@ -419,19 +424,19 @@ function App() {
     const initData = async () => {
       try {
         // Try connecting to Backend
-        const projectsRes = await fetch('http://localhost:3000/api/projects');
+        const projectsRes = await fetch(`${API_BASE_URL}/api/projects`);
         if (!projectsRes.ok) throw new Error('Backend offline');
         
         const projectsData = await projectsRes.json();
-        const doubtsRes = await fetch('http://localhost:3000/api/doubts');
+        const doubtsRes = await fetch(`${API_BASE_URL}/api/doubts`);
         const doubtsData = await doubtsRes.json();
 
         setProjects(projectsData);
         setDoubts(doubtsData);
         setBackendStatus('connected');
-        console.log('Connected to Backend Database');
+        console.log(`Connected to Backend at ${API_BASE_URL}`);
       } catch (err) {
-        console.log('Backend offline, switching to Browser Database (LocalStorage)');
+        console.log('Backend offline or blocked (Mixed Content), switching to Browser Database (LocalStorage)');
         setBackendStatus('disconnected');
         
         // Fallback to LocalStorage
@@ -459,7 +464,7 @@ function App() {
   const addProject = async (newProject) => {
     if (backendStatus === 'connected') {
       try {
-        const res = await fetch('http://localhost:3000/api/projects', {
+        const res = await fetch(`${API_BASE_URL}/api/projects`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newProject)
@@ -484,7 +489,7 @@ function App() {
   const addDoubt = async (newDoubt) => {
     if (backendStatus === 'connected') {
       try {
-        const res = await fetch('http://localhost:3000/api/doubts', {
+        const res = await fetch(`${API_BASE_URL}/api/doubts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newDoubt)
