@@ -861,6 +861,8 @@ function App() {
         
         const projectsData = await projectsRes.json();
         const doubtsRes = await fetch(`${API_BASE_URL}/api/doubts`, { headers });
+        
+        if (!doubtsRes.ok) throw new Error('Doubts fetch failed');
         const doubtsData = await doubtsRes.json();
 
         setProjects(projectsData);
