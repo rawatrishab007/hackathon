@@ -291,6 +291,12 @@ setInterval(async () => {
   }
 }, 60 * 1000); // Run every minute
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// Export for Vercel
+module.exports = app;
+
+// Only listen if running directly (not via Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
