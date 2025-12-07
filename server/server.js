@@ -17,9 +17,16 @@ app.use((req, res, next) => {
 });
 
 // --- Database Setup ---
+// On Vercel, we must use /tmp for the database as other directories are read-only
+const dbPath = process.env.VERCEL 
+  ? '/tmp/database.sqlite' 
+  : path.join(__dirname, 'database.sqlite');
+
+console.log(`Using database at: ${dbPath}`);
+
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: path.join(__dirname, 'database.sqlite'),
+  storage: dbPath,
   logging: false
 });
 
